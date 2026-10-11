@@ -131,6 +131,8 @@ form input{border:2px solid var(--line);background:var(--paper-hi);border-radius
 .btn.save{background:var(--green);font-family:var(--f-hand);font-size:1.4rem}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper-hi);padding:10px 16px;border-radius:12px;font-family:var(--f-label);font-size:1.1rem;z-index:20;box-shadow:3px 3px 0 var(--red)}
 
+.update{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;align-items:center;gap:12px;white-space:nowrap;background:var(--yellow);color:var(--ink);border:2.5px solid var(--line);border-radius:var(--wobble);box-shadow:3px 4px 0 var(--line);padding:10px 14px;font-family:var(--f-label);font-size:1.1rem}
+.update b{background:var(--red);color:#fff;border:2px solid var(--line);border-radius:999px;padding:2px 12px;font-weight:400}
 .table{margin-top:10px;height:46px;border-radius:12px 12px 0 0;background:linear-gradient(var(--wood-dk) 0 5px,var(--wood) 5px);border:2.5px solid var(--line);border-bottom:0;position:relative}
 .acct{display:flex;flex-direction:column;gap:10px}
 .acct form{padding:0}
@@ -193,6 +195,7 @@ form input{border:2px solid var(--line);background:var(--paper-hi);border-radius
   <section class="acct" id="acct"></section>
 </div>
 <div class="toast" id="toast" hidden></div>
+<button type="button" class="update" id="upd" hidden>Új verzió érhető el <b>Frissítés</b></button>
 
 <script>
 const TAGS={suli:"Suli",gyerek:"Gyerekkor",buli:"Buli és ivás",gaming:"Gaming és LAN",melo:"Melók",kinos:"Kínos",kozl:"Közlekedés",unnep:"Ünnepek",vasarlas:"Vásárlás",net:"Internet",kutyu:"Kütyük",film:"Filmek",konteo:"Konteó",rage:"Rage"};
@@ -546,7 +549,17 @@ addForm.addEventListener("submit",e=>{
 render(); drawAcct(); sync();
 addEventListener("online",sync);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden) sync()});
-if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+if("serviceWorker" in navigator){
+  // új verzió: az új service worker átveszi az irányítást, ekkor felajánljuk a frissítést
+  let hadCtrl=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register("sw.js").then(reg=>{
+    const check=()=>{reg.update().catch(()=>{})};
+    document.addEventListener("visibilitychange",()=>{if(!document.hidden) check()});
+    setInterval(check,30*60*1000);
+  }).catch(()=>{});
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{ if(!hadCtrl){hadCtrl=true;return} document.getElementById("upd").hidden=false; });
+  document.getElementById("upd").onclick=()=>location.reload();
+}
 </script>
 </body>
 </html>
