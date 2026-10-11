@@ -1,6 +1,6 @@
 // PODkedd service worker: offline is működik, az állapot online szinkronizál a Supabase-szel.
-const VERSION = "pk-v1";
-const SHELL = ["./", "./index.html", "./config.js", "./manifest.webmanifest",
+const VERSION = "pk-v2";
+const SHELL = ["./", "./index.html", "./config.js", "./manifest.webmanifest", "./img/borito.jpg",
   "./icons/icon-180.png", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png"];
 
 self.addEventListener("install", e => {
