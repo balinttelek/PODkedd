@@ -81,7 +81,10 @@ form .btn{flex:none}
 .chips{display:flex;gap:7px;flex-wrap:wrap}
 .chip{border:2px solid var(--line);background:var(--card);border-radius:999px;padding:5px 13px;font-size:.92rem;font-weight:500}
 .chip[aria-pressed="true"]{background:var(--yellow);font-weight:700;box-shadow:2px 2px 0 var(--line)}
-#fWho .chip[aria-pressed="true"]{background:var(--green)}
+#fWho .chip{display:inline-flex;align-items:center;gap:6px}
+#fWho .chip .dot{width:11px;height:11px;border-radius:50%;background:var(--pc);border:1.5px solid var(--line)}
+#fWho .chip[aria-pressed="true"]{background:var(--pc);color:var(--pt)}
+#fWho .chip[aria-pressed="true"] .dot{border-color:var(--pt)}
 
 .resultbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;color:var(--muted);font-family:var(--f-label);font-size:1.05rem}
 .resultbar select{border:2px solid var(--line);background:var(--card);border-radius:10px;padding:5px 8px;font-family:var(--f-body);font-size:.88rem}
@@ -103,7 +106,7 @@ form .btn{flex:none}
 .title.empty{color:var(--muted);font-style:italic;font-weight:500}
 .meta{display:flex;flex-wrap:wrap;gap:5px;align-items:center;font-size:.8rem;color:var(--muted)}
 .pill{border:1.5px solid var(--muted);border-radius:999px;padding:1px 8px}
-.pill.who{border-color:var(--green);color:#3d7a22;font-weight:600}
+.pill.who{background:var(--pc);color:var(--pt);border:1.5px solid var(--line);font-weight:700}
 .pill.dur{border-color:var(--wood);color:var(--wood-dk);font-weight:600}
 .pill.own{border-color:var(--blue);color:var(--blue)}
 .note{font-size:.84rem;color:var(--red-dk);font-family:var(--f-label);font-size:1rem;line-height:1.25}
@@ -142,7 +145,7 @@ form input{border:2px solid var(--line);background:var(--paper-hi);border-radius
 <div class="wrap">
   <header>
     <h1 class="vh">PODkedd sztoritár</h1>
-    <img class="cover" src="img/borito.jpg" width="1280" height="720" alt="PODkedd, lehetőleg kedden, majdnem gamer podcast: a csapat rajzolt karikatúrája az asztal körül">
+    <img class="cover" src="img/borito.jpg" width="1280" height="720" alt="PODkedd, lehetőleg kedden, majdnem gamer podcast: balról jobbra Balázs, Alex, Covery, GoodLike és Lali rajzolt karikatúrája az asztal körül">
     <div class="stats" id="stats"></div>
   </header>
 
@@ -179,7 +182,7 @@ form input{border:2px solid var(--line);background:var(--paper-hi);border-radius
         <label>Hossz (perc)<input id="nDur" inputmode="numeric" placeholder="15"></label>
       </div>
       <label>Miről szól<input id="nTitle" placeholder="Covery IKEA-s félreértése" required></label>
-      <label>Ki meséli (vesszővel)<input id="nWho" placeholder="Covery, Balázs"></label>
+      <label>Ki meséli (vesszővel)<input id="nWho" placeholder="Covery, Balázs (ahogy a szűrőben)"></label>
       <div class="frow"><span class="flabel">Téma</span><div class="chips" id="nTags"></div></div>
       <button class="btn save" type="submit">Mentés</button>
       <span class="hint">A kezdést írhatod így is: 1:12:30, 53:00 vagy simán 53 (perc).</span>
@@ -193,7 +196,10 @@ form input{border:2px solid var(--line);background:var(--paper-hi);border-radius
 
 <script>
 const TAGS={suli:"Suli",gyerek:"Gyerekkor",buli:"Buli és ivás",gaming:"Gaming és LAN",melo:"Melók",kinos:"Kínos",kozl:"Közlekedés",unnep:"Ünnepek",vasarlas:"Vásárlás",net:"Internet",kutyu:"Kütyük",film:"Filmek",konteo:"Konteó",rage:"Rage"};
-const WHO=["Covery","Goodlike","Balázs","Lali","Alex","Papi"];
+// pólószínek a borítóról, balról jobbra; Ryan és Papi nincs a végleges borítón
+const WHO=["Balázs","Alex","Covery","GoodLike","Lali","Ryan","Papi"];
+const SHIRT={"Balázs":["#f2b632","#1d1b18"],"Alex":["#3b332b","#f3e7a8"],"Covery":["#6cbf47","#1d1b18"],"GoodLike":["#2f63b6","#ffffff"],"Lali":["#d6302a","#ffffff"]};
+const shirt=w=>{const c=SHIRT[w]||["#d9d6cf","#1d1b18"];return `--pc:${c[0]};--pt:${c[1]}`};
 const EPT={119:"Virtuális valóság és más dolgok",120:"Vásárolható videó a YouTube-on, HER, Overwatch",121:"Leghallgatottabb és a legszerényebb podcast az országban",123:"Aranyélet, Gear S2",125:"Évértékelő, jövő váró, behirdető bebaxxos live",126:"Robotok, robotok mindenhol! Vagy nem",127:"Star Wars spoileresen, előző év, jövőről",128:"Fontos változások vannak… Új év új lehetőségek",129:"Vendégkedd: Büntető podcast",130:"Useless cuccok, túlárazott vacakok és régi kütyüink",131:"Siege, Firewatch, Overwatch és Miskolcia nyelvészeti tanfolyam!",132:"Vendégkedd: Kelt a Meti Heteortól",135:"PODszerda: Sebaj, jövünk!",136:"HUN van Covery",137:"Rainbow 6 Siege médiabajnokság, S7 Edge, GearVR",138:"Full of gaming adás",140:"Dumálgatós, lazulós",142:"VÉGRE PODKEDD! NA mi történt he?!",143:"Végre fullon a csapat!",144:"Papi lenni Amerika, BF1 vs COD, régi kedvenc játékélményeink",145:"Podcsütörtök: Google IO miegymás",146:"OVS felkészítő, majd kitaláljuk adás",149:"OVS-re megyünk",151:"Legjobb nyári story-k!",152:"A LEGDISLIKEOLTABB PODKEDD!!!",154:"YouTube underground, minden videós hülye?",156:"Sulikezdés élmények, egyedi cuccok a láthatáron!",157:"ÉS AKKOR AZT HITTEM HOGY Ő AZ…!!!444!!!",158:"0100001101001100…",159:"Adományozós felhívás, CS:GO csalók, kütyük!",163:"Rainbow6 GYERTEK EL!, Raszta…kmmm…2, meg még más dolgok",164:"Új setup, fídbek pls!",165:"FONTOS VÁLTOZÁSOK MLG!",166:"Időutazás",168:"Ingyen pénz munka nélkül, nem KLIKKBÉJT 100% (kacsint)",169:"Mesterséges Unintelligencia",170:"Együtt a BANDA!!!",172:"Videós gála és egyéb nyalánkságok",173:"Gamerkedd. Nagyon játszunk az egyik nagy durranással!",174:"Covery és az iPhone",176:"DILEMMA",177:"ITT VAGYUNK, RANT",179:"RAGE TIME",186:"Első webkamerás PODkedd és update a GeekBoxról"};
 const m=x=>x*60, W=-1;
 // [rész, kezdés mp, téma, hossz perc (null = nem tudni, -1 = egész adás), címkék, kik, megjegyzés]
@@ -206,7 +212,7 @@ const BASE=[
 [26,m(37),"Kell-e kisgyerekeknek telefon, gyerekkori sztorik",11,["gyerek"],[]],
 [28,m(50),"Álmos, orvosos történetek",null,["kinos"],[]],
 [30,m(28),"Pizzafutáros sztorik",14,["melo"],[],"A doksi egyik helyén 27., a másikon 28. perc."],
-[35,m(7),"Goodlike kikickeli Alexet CS:GO-ból",null,["gaming"],["Goodlike","Alex"]],
+[35,m(7),"GoodLike kikickeli Alexet CS:GO-ból",null,["gaming"],["GoodLike","Alex"]],
 [35,m(109),"Covery hangyós rage",null,["rage"],["Covery"]],
 [37,0,"Április elsejei prank",null,["kinos"],[]],
 [37,m(39),"Alex LoL assault class",null,["gaming"],["Alex"]],
@@ -215,7 +221,7 @@ const BASE=[
 [55,0,"Ki mit lopott, sulis sztorik",W,["suli","gyerek"],[]],
 [57,m(39),"S3 vs S5 incidens",null,["kutyu"],[]],
 [59,m(16),"Covery mekis családi menüs sztorija",7,["vasarlas"],["Covery"],"A doksi egyik helyén 15., a másikon 16. perc."],
-[60,m(81),"Goodlike és Lali gokartos vitája",null,["kozl"],["Goodlike","Lali"]],
+[60,m(81),"GoodLike és Lali gokartos vitája",null,["kozl"],["GoodLike","Lali"]],
 [63,0,"Fagyimaffia, vezetés, régi filmek amik felnőttként már nem jók, kamu sztorik",W,["gyerek","kozl","film"],[]],
 [69,m(62),"Gyerekkori businessek",27,["gyerek"],[]],
 [70,m(61),"Evős, ivós, alvós sztorik",30,["buli"],[]],
@@ -232,7 +238,7 @@ const BASE=[
 [84,m(60),"Covery éttermes sztorija",8,["melo"],["Covery"]],
 [84,m(68),"PODkedd-reklám",16,[],[]],
 [84,m(84),"Halandzsázás",null,["kinos"],[]],
-[85,m(49),"Goodlike CS:GO-menedzser lesz",null,["gaming"],["Goodlike"]],
+[85,m(49),"GoodLike CS:GO-menedzser lesz",null,["gaming"],["GoodLike"]],
 [85,m(109),"Dartsos sztorik",null,["buli"],[]],
 [86,m(38),"Covery orosz mondata",null,["kinos"],["Covery"]],
 [87,m(82),"Telefonálós sztorik",19,["kinos"],[],"A doksi egyik helyén 1:20, a másikon 1:22."],
@@ -249,7 +255,7 @@ const BASE=[
 [101,m(20),"Gyerekkori hazugságok",null,["gyerek"],[]],
 [102,0,"Rekt, drónok, nyári filmek, táborok, sulis sztorik",null,["suli","film","kutyu"],[]],
 [107,0,"Lali Cliffy B rage",9,["rage","gaming"],["Lali"]],
-[109,m(80),"Goodlike megszerzi a jogsit",null,["kozl"],["Goodlike"]],
+[109,m(80),"GoodLike megszerzi a jogsit",null,["kozl"],["GoodLike"]],
 [110,m(60),"Gyerekkori kamuk, lógós, ivós sztorik, büntetések",40,["gyerek","suli","buli"],[]],
 [111,0,"Egy nap törvények nélkül",74,[],[]],
 [111,m(119),"Autós sztorik",12,["kozl"],[]],
@@ -261,13 +267,13 @@ const BASE=[
 [121,m(13),"Covery zsidó vicce",null,[],["Covery"]],
 [121,m(74),"LED-es övek",null,["kutyu"],[]],
 [121,m(96),"Balázs S6-ja",null,["kutyu"],["Balázs"]],
-[121,m(105),"Goodlike tesójára rátörtek",null,[],["Goodlike"]],
+[121,m(105),"GoodLike tesójára rátörtek",null,[],["GoodLike"]],
 [123,m(84),"Felsőoktatás, puskázás, sulis sztorik",50,["suli"],[],"A doksi egyik helyén 1:25, a másikon 1:24."],
 [125,m(18),"Covery panelházas vitája",null,[],["Covery"]],
 [126,0,"Gamer hűtő",null,["kutyu"],[]],
 [126,m(67),"Indiai akciófilmek",null,["film"],[]],
 [127,m(10),"Covery találkozása az indiai supporttal",12,["vasarlas"],["Covery"]],
-[127,m(22),"Goodlike odamegy",null,[],["Goodlike"]],
+[127,m(22),"GoodLike odamegy",null,[],["GoodLike"]],
 [127,m(65),"Rajzfilmek eredeti történetei",null,["film","gyerek"],[]],
 [128,m(45),"Hányós sztorik",9,["buli","kinos"],[]],
 [129,m(79),"Kínos helyzetek",null,["kinos"],[]],
@@ -286,7 +292,7 @@ const BASE=[
 [142,m(28),"PlayIT-sztorik",20,["gaming"],[]],
 [143,m(84),"„Dögevők”, informatikai segítségnyújtós sztorik",null,["melo","kutyu"],[]],
 [144,m(13),"Covery fogadása, Papi amerikai élményei",null,[],["Covery","Papi"]],
-[144,m(96),"Goodlike CS-gambling sztorija",null,["gaming"],["Goodlike"]],
+[144,m(96),"GoodLike CS-gambling sztorija",null,["gaming"],["GoodLike"]],
 [145,m(93),"Vicces viccek",21,[],[]],
 [146,0,"Wireless headset-sztori",null,["kutyu"],[]],
 [146,m(66),"Mindennapok hülyéi, eladós átverések",22,["vasarlas"],[]],
@@ -294,7 +300,7 @@ const BASE=[
 [151,m(12),"Fesztiválok, Lali görkori-rantje, bevásárlókocsis sztorik, táborból kiszökések",null,["buli","gyerek","rage"],["Lali"]],
 [152,0,"Pokémon GO, clickbait, a legdislikeoltabb PODkedd",W,["gaming","net"],[]],
 [154,m(66),"Diszkós sztorik",null,["buli"],[]],
-[154,m(106),"Kéregetők, előtte Goodlike jövök-megyek pólója",null,[],["Goodlike"]],
+[154,m(106),"Kéregetők, előtte GoodLike jövök-megyek pólója",null,[],["GoodLike"]],
 [156,m(48),"Gyerekkori csúfolódások",19,["gyerek"],[]],
 [156,m(87),"Első sulinap, sulis sztorik",null,["suli"],[]],
 [157,0,"Indiai scammerek, alvászavarok, Covery futáros sztorija",29,["melo","net"],["Covery"]],
@@ -425,7 +431,7 @@ const TIMES=[["any","Bármennyi"],["10","10 perc"],["20","20 perc"],["45","45 pe
 const SHOWS=[["all","Mind"],["new","Még nem hallgattam"],["fav","Kedvencek"],["check","Ellenőrizendő"]];
 
 function chipRow(el,items,isOn,onTap){
-  el.innerHTML=items.map(([k,l])=>`<button type="button" class="chip" data-k="${esc(k)}" aria-pressed="${isOn(k)}">${esc(l)}</button>`).join("");
+  el.innerHTML=items.map(([k,l])=>`<button type="button" class="chip" data-k="${esc(k)}" aria-pressed="${isOn(k)}"${el.id==="fWho"?` style="${shirt(k)}"`:""}>${el.id==="fWho"?'<i class="dot"></i>':""}${esc(l)}</button>`).join("");
   el.onclick=e=>{const b=e.target.closest(".chip"); if(!b) return; onTap(b.dataset.k); render();};
 }
 function drawFilters(){
@@ -460,7 +466,7 @@ const icCopy='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 function card(s,inPick){
   const dur=s.dur===-1?'<span class="pill dur">egész adás</span>':(s.dur!=null?`<span class="pill dur">~${s.dur} perc</span>`:"");
   const tags=s.tags.map(t=>`<span class="pill">${esc(TAGS[t]||t)}</span>`).join("");
-  const who=s.who.map(w=>`<span class="pill who">${esc(w)}</span>`).join("");
+  const who=s.who.map(w=>`<span class="pill who" style="${shirt(w)}">${esc(w)}</span>`).join("");
   const own=s.own?'<span class="pill own">saját</span>':"";
   const sp=`https://open.spotify.com/search/${encodeURIComponent("PODkedd E"+s.ep)}`;
   return `<article class="card${S.done[s.id]&&!inPick?" done":""}" id="${inPick?"":"c-"+s.id}">
