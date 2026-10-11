@@ -1,4 +1,4 @@
-// PodKedd service worker: offline is működik, az állapot online szinkronizál a Supabase-szel.
+// PODkedd service worker: offline is működik, az állapot online szinkronizál a Supabase-szel.
 const VERSION = "pk-v1";
 const SHELL = ["./", "./index.html", "./config.js", "./manifest.webmanifest",
   "./icons/icon-180.png", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png"];

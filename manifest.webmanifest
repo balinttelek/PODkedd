@@ -1,7 +1,7 @@
 {
-  "name": "PodKedd sztoritár",
-  "short_name": "PodKedd",
-  "description": "Kedvenc PodKedd-sztorik időbélyegekkel",
+  "name": "PODkedd sztoritár",
+  "short_name": "PODkedd",
+  "description": "Kedvenc PODkedd-sztorik időbélyegekkel",
   "lang": "hu",
   "start_url": "./",
   "scope": "./",
