@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PodKedd</title>
+<meta name="description" content="Kedvenc PodKedd-sztorik időbélyegekkel">
+<meta name="theme-color" content="#f6f3fa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15121c" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PodKedd">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<script src="config.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+html,body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+a.btn{color:var(--fg);text-decoration:none}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+/* Layout: egy oszlopos, telefonra szabott katalógus; ragadós keresősáv, alatta szűrők, majd sztorikártyák szalagszámláló-szerű időbélyeggel */
+:root{
+  --bg:#15121c; --surface:#1e1a28; --surface2:#262132; --line:#322b40;
+  --fg:#efeaf5; --muted:#a39cb3; --accent:#ffb347; --on-accent:#1a1206;
+  --good:#5fd39a; --warn:#ff8a6b;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
+  --bg:#f6f3fa; --surface:#ffffff; --surface2:#f0ebf6; --line:#e2dbeb;
+  --fg:#1b1724; --muted:#655d74; --accent:#b96300; --on-accent:#ffffff;
+  --good:#1d8a57; --warn:#c2410c; color-scheme:light } }
+:root[data-theme="light"]{
+  --bg:#f6f3fa; --surface:#ffffff; --surface2:#f0ebf6; --line:#e2dbeb;
+  --fg:#1b1724; --muted:#655d74; --accent:#b96300; --on-accent:#ffffff;
+  --good:#1d8a57; --warn:#c2410c; color-scheme:light }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.45}
+.wrap{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:20px 80px;display:flex;flex-direction:column;gap:18px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header{display:flex;flex-direction:column;gap:6px}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(2.1rem,9vw,3rem);line-height:1;margin:0;letter-spacing:-.02em;text-wrap:balance}
+h1 .k{color:var(--accent)}
+.tag-line{font-family:var(--f-display);font-weight:500;color:var(--muted);font-size:1.05rem}
+.stats{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+
+.roulette{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 16px;font-weight:600;display:inline-flex;align-items:center;gap:8px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent);flex:1 1 180px;justify-content:center;font-size:1.05rem}
+.btn.ghost{background:transparent}
+
+.pick{border:2px solid var(--accent);border-radius:16px;background:var(--surface);padding:16px;display:flex;flex-direction:column;gap:10px}
+.pick-label{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+
+.searchbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;margin-block:-8px}
+.searchbar input{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;font-size:16px}
+.searchbar input::placeholder{color:var(--muted)}
+
+.filters{display:flex;flex-direction:column;gap:12px}
+.frow{display:flex;flex-direction:column;gap:6px}
+.flabel{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:.88rem;font-weight:500}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.more{background:none;border:0;color:var(--accent);font-weight:600;padding:0;align-self:flex-start;font-size:.9rem}
+
+.resultbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:.9rem}
+.resultbar select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 8px;font-size:.88rem}
+
+.list{display:flex;flex-direction:column;gap:10px}
+.card{border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:14px;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:start}
+.card.done{opacity:.55}
+.card.flash{animation:flash 1.4s ease-out}
+@keyframes flash{0%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion: reduce){.card.flash{animation:none;box-shadow:0 0 0 3px var(--accent)}}
+.counter{grid-row:span 2;display:flex;flex-direction:column;align-items:center;gap:4px;width:98px}
+.ep{font-family:var(--f-mono);font-weight:700;font-size:.8rem;color:var(--muted)}
+.time{font-family:var(--f-mono);font-weight:700;font-size:1.15rem;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-variant-numeric:tabular-nums;color:var(--accent);white-space:nowrap}
+.body{min-width:0;display:flex;flex-direction:column;gap:6px}
+.title{font-weight:600;font-size:1.02rem;line-height:1.3;overflow-wrap:anywhere}
+.title.empty{color:var(--muted);font-style:italic;font-weight:500}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem;color:var(--muted)}
+.pill{border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+.pill.who{border-style:dashed}
+.pill.dur{font-family:var(--f-mono);font-weight:500}
+.pill.own{border-color:var(--accent);color:var(--accent)}
+.note{font-size:.82rem;color:var(--warn);display:flex;gap:6px}
+.eptitle{font-size:.82rem;color:var(--muted)}
+.actions{grid-column:2;display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.act{border:1px solid var(--line);background:transparent;border-radius:8px;padding:6px 10px;font-size:.85rem;font-weight:500;display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--fg)}
+.act[aria-pressed="true"].fav{color:var(--accent);border-color:var(--accent)}
+.act[aria-pressed="true"].dn{color:var(--good);border-color:var(--good)}
+.act svg{width:16px;height:16px}
+.empty-state{text-align:center;color:var(--muted);padding:32px 8px;border:1px dashed var(--line);border-radius:14px}
+
+details.add{border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+details.add summary{padding:14px 16px;font-weight:600;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.add summary::-webkit-details-marker{display:none}
+details.add summary::after{content:"+";font-family:var(--f-mono);color:var(--accent);font-size:1.3rem}
+details.add[open] summary::after{content:"−"}
+form{display:flex;flex-direction:column;gap:12px;padding:0 16px 16px}
+form .btn.primary{flex:none}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+label{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(--muted);min-width:0}
+form input{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px;font-size:16px;width:100%}
+.hint{font-size:.8rem;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;font-size:.9rem;z-index:20}
+footer{color:var(--muted);font-size:.8rem;display:flex;flex-direction:column;gap:8px}
+footer a{color:var(--accent)}
+.acct{border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:10px}
+.acct form{padding:0}
+.acct .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:.88rem}
+.acct .row button{background:none;border:0;color:var(--accent);font-weight:600;padding:0}
+.err{color:var(--warn);font-size:.85rem}
+.sync{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);margin-right:6px;vertical-align:middle}
+.sync.ok{background:var(--good)}.sync.busy{background:var(--accent)}.sync.bad{background:var(--warn)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><h1>Pod<span class="k">Kedd</span></h1><span class="tag-line">sztoritár</span></div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="roulette">
+    <button class="btn primary" id="spin" type="button">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.2L3 16M3 21v-5h5"/></svg>
+      Sztori-rulett
+    </button>
+    <a class="btn ghost" href="https://open.spotify.com/show/35n2VJXXTErdasYxrj5Abc" target="_blank" rel="noopener">Spotify</a>
+  </div>
+  <section id="pick" class="pick" hidden></section>
+
+  <div class="searchbar"><input id="q" type="search" placeholder="Keresés: pizzafutár, LAN, Covery, E88…" autocomplete="off"></div>
+
+  <section class="filters">
+    <div class="frow"><span class="flabel">Mennyi időd van?</span><div class="chips" id="fTime"></div></div>
+    <div class="frow"><span class="flabel">Téma</span><div class="chips" id="fTag"></div></div>
+    <div class="frow"><span class="flabel">Ki meséli</span><div class="chips" id="fWho"></div></div>
+    <div class="frow"><span class="flabel">Mutasd</span><div class="chips" id="fShow"></div></div>
+  </section>
+
+  <div class="resultbar">
+    <span id="count"></span>
+    <label style="flex-direction:row;align-items:center;gap:6px">Sorrend
+      <select id="sort"><option value="asc">Rész szerint ↑</option><option value="desc">Rész szerint ↓</option><option value="short">Legrövidebb elöl</option></select>
+    </label>
+  </div>
+
+  <div class="list" id="list"></div>
+
+  <details class="add" id="add">
+    <summary>Új sztori hozzáadása</summary>
+    <form id="addForm" autocomplete="off">
+      <div class="grid3">
+        <label>Rész<input id="nEp" inputmode="numeric" placeholder="88" required></label>
+        <label>Kezdés<input id="nStart" placeholder="1:12:30" required></label>
+        <label>Hossz (perc)<input id="nDur" inputmode="numeric" placeholder="15"></label>
+      </div>
+      <label>Miről szól<input id="nTitle" placeholder="Covery IKEA-s félreértése" required></label>
+      <label>Ki meséli (vesszővel)<input id="nWho" placeholder="Covery, Balázs"></label>
+      <div class="frow"><span class="flabel">Téma</span><div class="chips" id="nTags"></div></div>
+      <button class="btn primary" type="submit">Mentés</button>
+      <span class="hint">A kezdést írhatod így is: 1:12:30, 53:00 vagy simán 53 (perc).</span>
+    </form>
+  </details>
+
+  <section class="acct" id="acct"></section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const TAGS={suli:"Suli",gyerek:"Gyerekkor",buli:"Buli és ivás",gaming:"Gaming és LAN",melo:"Melók",kinos:"Kínos",kozl:"Közlekedés",unnep:"Ünnepek",vasarlas:"Vásárlás",net:"Internet",kutyu:"Kütyük",film:"Filmek",konteo:"Konteó",rage:"Rage"};
+const WHO=["Covery","Goodlike","Balázs","Lali","Alex","Papi"];
+const EPT={119:"Virtuális valóság és más dolgok",120:"Vásárolható videó a YouTube-on, HER, Overwatch",121:"Leghallgatottabb és a legszerényebb podcast az országban",123:"Aranyélet, Gear S2",125:"Évértékelő, jövő váró, behirdető bebaxxos live",126:"Robotok, robotok mindenhol! Vagy nem",127:"Star Wars spoileresen, előző év, jövőről",128:"Fontos változások vannak… Új év új lehetőségek",129:"Vendégkedd: Büntető podcast",130:"Useless cuccok, túlárazott vacakok és régi kütyüink",131:"Siege, Firewatch, Overwatch és Miskolcia nyelvészeti tanfolyam!",132:"Vendégkedd: Kelt a Meti Heteortól",135:"PODszerda: Sebaj, jövünk!",136:"HUN van Covery",137:"Rainbow 6 Siege médiabajnokság, S7 Edge, GearVR",138:"Full of gaming adás",140:"Dumálgatós, lazulós",142:"VÉGRE PODKEDD! NA mi történt he?!",143:"Végre fullon a csapat!",144:"Papi lenni Amerika, BF1 vs COD, régi kedvenc játékélményeink",145:"Podcsütörtök: Google IO miegymás",146:"OVS felkészítő, majd kitaláljuk adás",149:"OVS-re megyünk",151:"Legjobb nyári story-k!",152:"A LEGDISLIKEOLTABB PODKEDD!!!",154:"YouTube underground, minden videós hülye?",156:"Sulikezdés élmények, egyedi cuccok a láthatáron!",157:"ÉS AKKOR AZT HITTEM HOGY Ő AZ…!!!444!!!",158:"0100001101001100…",159:"Adományozós felhívás, CS:GO csalók, kütyük!",163:"Rainbow6 GYERTEK EL!, Raszta…kmmm…2, meg még más dolgok",164:"Új setup, fídbek pls!",165:"FONTOS VÁLTOZÁSOK MLG!",166:"Időutazás",168:"Ingyen pénz munka nélkül, nem KLIKKBÉJT 100% (kacsint)",169:"Mesterséges Unintelligencia",170:"Együtt a BANDA!!!",172:"Videós gála és egyéb nyalánkságok",173:"Gamerkedd. Nagyon játszunk az egyik nagy durranással!",174:"Covery és az iPhone",176:"DILEMMA",177:"ITT VAGYUNK, RANT",179:"RAGE TIME",186:"Első webkamerás PODkedd és update a GeekBoxról"};
+const m=x=>x*60, W=-1;
+// [rész, kezdés mp, téma, hossz perc (null = nem tudni, -1 = egész adás), címkék, kik, megjegyzés]
+const BASE=[
+[12,m(53),"Lopások",11,["gyerek"],[]],
+[21,0,"Meghatározó filmes élmények",null,["film"],[]],
+[21,m(60),"Ryan lespoilerezi a Breaking Badet",null,["film"],[]],
+[23,m(9),"Covery 2000-es szilvesztere, házibulis történetek, bevásárlókocsi-verseny, gyerekkori videók",null,["unnep","buli","gyerek"],["Covery"]],
+[25,m(75),"Nyár volt",9,["gyerek"],[]],
+[26,m(37),"Kell-e kisgyerekeknek telefon, gyerekkori sztorik",11,["gyerek"],[]],
+[28,m(50),"Álmos, orvosos történetek",null,["kinos"],[]],
+[30,m(28),"Pizzafutáros sztorik",14,["melo"],[],"A doksi egyik helyén 27., a másikon 28. perc."],
+[35,m(7),"Goodlike kikickeli Alexet CS:GO-ból",null,["gaming"],["Goodlike","Alex"]],
+[35,m(109),"Covery hangyós rage",null,["rage"],["Covery"]],
+[37,0,"Április elsejei prank",null,["kinos"],[]],
+[37,m(39),"Alex LoL assault class",null,["gaming"],["Alex"]],
+[42,m(52),"Covery sajtos pufis sztorija, sok ivós, osztálykirándulásos sztori",null,["buli","suli"],["Covery"],"Az időtartamos listádban egész adásként szerepel."],
+[43,m(106),"Sulis sztorik",12,["suli"],[]],
+[55,0,"Ki mit lopott, sulis sztorik",W,["suli","gyerek"],[]],
+[57,m(39),"S3 vs S5 incidens",null,["kutyu"],[]],
+[59,m(16),"Covery mekis családi menüs sztorija",7,["vasarlas"],["Covery"],"A doksi egyik helyén 15., a másikon 16. perc."],
+[60,m(81),"Goodlike és Lali gokartos vitája",null,["kozl"],["Goodlike","Lali"]],
+[63,0,"Fagyimaffia, vezetés, régi filmek amik felnőttként már nem jók, kamu sztorik",W,["gyerek","kozl","film"],[]],
+[69,m(62),"Gyerekkori businessek",27,["gyerek"],[]],
+[70,m(61),"Evős, ivós, alvós sztorik",30,["buli"],[]],
+[75,m(72),"CS:GO-s, LAN-os sztorik",34,["gaming"],[]],
+[76,0,"Karácsonyi sztorik",60,["unnep"],[]],
+[76,m(60),"Szilveszter, blackoutos bulik",null,["unnep","buli"],[]],
+[77,m(69),"Videotékás, tűzijátékos sztorik, kínos helyzetek",null,["gyerek","kinos"],[]],
+[78,0,"Karaoke, Covery rapzenéje, graffitizés",22,["kinos"],["Covery"]],
+[79,0,"Becenevek, szülők a Facebookon, Facebook-lájkolós oldalak",null,["net","gyerek"],[]],
+[80,m(56),"Hittérítők",12,["kinos"],[]],
+[81,m(10),"90-es évek zenéi, mi lesz ciki és mi retró, Szomszédok vs Barátok közt, epic failok",60,["gyerek","film"],[]],
+[82,m(71),"Balázs Jaguar-szerelős sztorija",22,["kozl"],["Balázs"]],
+[82,m(93),"Zebrát vetítő autó",null,["kozl"],[]],
+[84,m(60),"Covery éttermes sztorija",8,["melo"],["Covery"]],
+[84,m(68),"PodKedd-reklám",16,[],[]],
+[84,m(84),"Halandzsázás",null,["kinos"],[]],
+[85,m(49),"Goodlike CS:GO-menedzser lesz",null,["gaming"],["Goodlike"]],
+[85,m(109),"Dartsos sztorik",null,["buli"],[]],
+[86,m(38),"Covery orosz mondata",null,["kinos"],["Covery"]],
+[87,m(82),"Telefonálós sztorik",19,["kinos"],[],"A doksi egyik helyén 1:20, a másikon 1:22."],
+[88,m(27),"Covery CD-kiírós sztorija",18,["gyerek","kutyu"],["Covery"]],
+[88,m(45),"Felismernek az utcán, másnak néznek (Balázst biztonsági őrnek, Coveryt IKEA-s dolgozónak)",51,["kinos"],["Balázs","Covery"]],
+[88,m(96),"CS:GO-mixes csapattársak",null,["gaming"],[]],
+[92,m(20),"Értelmetlen és rossz ajándékok, törések, sérülések, kórházas történetek",62,["unnep","gyerek"],[]],
+[93,0,"PlayIT-sztorik",54,["gaming"],[]],
+[94,m(51),"LAN-os jegyellenőrzés",3,["gaming"],[]],
+[94,m(72),"Gilbert játékai",null,["gaming"],[]],
+[95,m(36),"Összeesküvés-elméletek",14,["konteo"],[]],
+[99,m(47),"Alex supportja, Balázs autóvásárlása, szolgáltatós sztorik",null,["vasarlas","kozl"],["Alex","Balázs"]],
+[100,m(24),"Első barátnő, közös élmények",15,["gyerek"],[]],
+[101,m(20),"Gyerekkori hazugságok",null,["gyerek"],[]],
+[102,0,"Rekt, drónok, nyári filmek, táborok, sulis sztorik",null,["suli","film","kutyu"],[]],
+[107,0,"Lali Cliffy B rage",9,["rage","gaming"],["Lali"]],
+[109,m(80),"Goodlike megszerzi a jogsit",null,["kozl"],["Goodlike"]],
+[110,m(60),"Gyerekkori kamuk, lógós, ivós sztorik, büntetések",40,["gyerek","suli","buli"],[]],
+[111,0,"Egy nap törvények nélkül",74,[],[]],
+[111,m(119),"Autós sztorik",12,["kozl"],[]],
+[118,m(10),"GeekBox közönségtalálkozó, sztorik",17,["gaming"],[]],
+[118,m(98),"Karácsonyi ajándékok (Balázs József Attila-kisvonata)",null,["unnep"],["Balázs"],"Az időtartamos listádban ennél a résznél 1:33 és 19 perc áll."],
+[118,m(110),"Knoffentreffer",null,[],[]],
+[119,m(21),"Alex gyilkosságos rejtvényei",null,[],["Alex"]],
+[120,m(67),"Marci internet-rage",null,["rage","net"],[]],
+[121,m(13),"Covery zsidó vicce",null,[],["Covery"]],
+[121,m(74),"LED-es övek",null,["kutyu"],[]],
+[121,m(96),"Balázs S6-ja",null,["kutyu"],["Balázs"]],
+[121,m(105),"Goodlike tesójára rátörtek",null,[],["Goodlike"]],
+[123,m(84),"Felsőoktatás, puskázás, sulis sztorik",50,["suli"],[],"A doksi egyik helyén 1:25, a másikon 1:24."],
+[125,m(18),"Covery panelházas vitája",null,[],["Covery"]],
+[126,0,"Gamer hűtő",null,["kutyu"],[]],
+[126,m(67),"Indiai akciófilmek",null,["film"],[]],
+[127,m(10),"Covery találkozása az indiai supporttal",12,["vasarlas"],["Covery"]],
+[127,m(22),"Goodlike odamegy",null,[],["Goodlike"]],
+[127,m(65),"Rajzfilmek eredeti történetei",null,["film","gyerek"],[]],
+[128,m(45),"Hányós sztorik",9,["buli","kinos"],[]],
+[129,m(79),"Kínos helyzetek",null,["kinos"],[]],
+[130,m(88),"Régi eszközök, gyerekkori életveszélyes hülyeségek",43,["gyerek","kutyu"],[]],
+[131,m(97),"Balázsék vidéki osztálytársa, miskolci szavak",null,["suli"],["Balázs"]],
+[132,m(42),"Alvós sztorik",16,[],[]],
+[135,0,"Vonatozós élmények",38,["kozl"],[]],
+[135,m(38),"LAN-os sztorik",null,["gaming"],[]],
+[136,m(104),"Ovis, sulis sztorik",15,["suli","gyerek"],[],"A doksi egyik helyén 1:37, a másikon 1:44."],
+[137,m(52),"R6 médiabajnokság",26,["gaming"],[]],
+[137,m(77),"Doksira ránéz a csapat",null,[],[]],
+[138,m(51),"",10,[],[],"A doksidban itt nincs téma megadva."],
+[138,m(86),"Hírek manipulálása",null,["konteo","net"],[]],
+[140,0,"Roastkedd, később Covery Z-kategóriás horrorfilmje",null,["film"],["Covery"]],
+[140,m(89),"Ajándékok",null,["unnep"],[]],
+[142,m(28),"PlayIT-sztorik",20,["gaming"],[]],
+[143,m(84),"„Dögevők”, informatikai segítségnyújtós sztorik",null,["melo","kutyu"],[]],
+[144,m(13),"Covery fogadása, Papi amerikai élményei",null,[],["Covery","Papi"]],
+[144,m(96),"Goodlike CS-gambling sztorija",null,["gaming"],["Goodlike"]],
+[145,m(93),"Vicces viccek",21,[],[]],
+[146,0,"Wireless headset-sztori",null,["kutyu"],[]],
+[146,m(66),"Mindennapok hülyéi, eladós átverések",22,["vasarlas"],[]],
+[149,m(81),"Media Markt-os sztori",null,["vasarlas"],[]],
+[151,m(12),"Fesztiválok, Lali görkori-rantje, bevásárlókocsis sztorik, táborból kiszökések",null,["buli","gyerek","rage"],["Lali"]],
+[152,0,"Pokémon GO, clickbait, a legdislikeoltabb PodKedd",W,["gaming","net"],[]],
+[154,m(66),"Diszkós sztorik",null,["buli"],[]],
+[154,m(106),"Kéregetők, előtte Goodlike jövök-megyek pólója",null,[],["Goodlike"]],
+[156,m(48),"Gyerekkori csúfolódások",19,["gyerek"],[]],
+[156,m(87),"Első sulinap, sulis sztorik",null,["suli"],[]],
+[157,0,"Indiai scammerek, alvászavarok, Covery futáros sztorija",29,["melo","net"],["Covery"]],
+[158,m(83),"PlayIT-sztorik",16,["gaming"],[]],
+[159,m(57),"Vásárlós, szervizes sztorik",33,["vasarlas"],[]],
+[163,0,"PlayIT-sztorik",13,["gaming"],[]],
+[163,m(26),"R6 médiabajnokság-sztorik",null,["gaming"],[]],
+[164,m(78),"Vezekényi Laci, Tech2.hu PS4-review",null,["gaming"],[]],
+[165,m(39),"Részegen veszélyes dolgokat csináló emberek, netes botok, csalók, spamek, vicces vezetéknevek",null,["buli","net"],[],"53:30 körül nagyon hangos rész jön, halkíts le."],
+[166,0,"Időutazás-konteó",null,["konteo"],[]],
+[166,m(104),"Covery R6-csalása",null,["gaming"],["Covery"]],
+[168,m(90),"Rossz szituációk, Balázs Gyanú árnyékában-castingja, konteó",null,["kinos","konteo"],["Balázs"]],
+[169,m(93),"Balázs nete",null,["net","rage"],["Balázs"]],
+[170,0,"Telefontörések, gyerekkori businessek",null,["gyerek","kutyu"],[]],
+[170,m(63),"Covery reptiliánhívós sztorija",null,["konteo"],["Covery"]],
+[172,m(4),"Balázs garázdaság elleni eljárása",8,["kinos"],["Balázs"]],
+[172,m(12),"Monetizáció, failok az életben",19,["net"],[]],
+[172,m(70),"Párhuzamos dimenzió-konteó, összeesküvés-elméletek",null,["konteo"],[]],
+[173,m(10),"Emberek, akiknek nem tudjuk a nevét",null,["kinos"],[]],
+[173,m(80),"Balázs matricakampánya, netes barátságok",null,["net"],["Balázs"]],
+[173,m(102),"",null,[],[],"A doksidban itt nincs téma megadva."],
+[174,m(79),"Nyári szünet, iskolás sztorik",22,["suli"],[]],
+[176,m(47),"Vonat-dilemmák",null,[],[]],
+[177,m(57),"Covery: Konzolvilág, Ricsi",null,["vasarlas"],["Covery"]],
+[179,m(24),"",3,[],[],"A doksidban itt nincs téma megadva."],
+[179,m(68),"",null,[],[],"A doksidban itt nincs téma megadva."],
+[186,m(74),"Cipővásárlós sztorik",11,["vasarlas"],[]]
+];
+
+const CFG=window.PK_CONFIG||{}; const API=(CFG.supabaseUrl||"").replace(/\/$/,"");
+const STORE="pk-store-v1", AUTH="pk-auth-v1";
+let store={rows:{},dirty:{},lastSync:0};
+try{const s=JSON.parse(localStorage.getItem(STORE)||"null"); if(s) store=Object.assign(store,s);}catch(e){}
+let auth=null; try{auth=JSON.parse(localStorage.getItem(AUTH)||"null")}catch(e){}
+const saveStore=()=>{try{localStorage.setItem(STORE,JSON.stringify(store))}catch(e){}};
+const saveAuth=()=>{try{auth?localStorage.setItem(AUTH,JSON.stringify(auth)):localStorage.removeItem(AUTH)}catch(e){}};
+let S={fav:{},done:{},own:[]};
+function rebuild(){S={fav:{},done:{},own:[]};
+  for(const [id,r] of Object.entries(store.rows)){ if(r.deleted) continue; const d=r.data||{};
+    if(d.fav) S.fav[id]=1; if(d.done) S.done[id]=1; if(d.story) S.own.push(d.story);}
+}
+rebuild();
+function put(id,data){store.rows[id]={data,updated_at:new Date().toISOString(),deleted:false};store.dirty[id]=1;saveStore();rebuild();scheduleSync()}
+function setFlag(id,k,v){const r=store.rows[id];const d={...(r&&!r.deleted?r.data:{})};if(v)d[k]=true;else delete d[k];put(id,d)}
+function delRow(id){const r=store.rows[id];store.rows[id]={data:r?r.data:{},updated_at:new Date().toISOString(),deleted:true};store.dirty[id]=1;saveStore();rebuild();scheduleSync()}
+
+function setSession(j){auth={access_token:j.access_token,refresh_token:j.refresh_token,expires_at:Date.now()+(j.expires_in||3600)*1000,user_id:j.user?j.user.id:auth.user_id,email:j.user?j.user.email:auth.email};saveAuth()}
+async function authCall(grant,body){
+  const r=await fetch(API+"/auth/v1/token?grant_type="+grant,{method:"POST",headers:{apikey:CFG.supabaseKey,"Content-Type":"application/json"},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({})); if(!r.ok){const e=new Error(j.error_description||j.msg||j.message||"auth");e.status=r.status;throw e} return j;
+}
+async function refresh(){
+  try{setSession(await authCall("refresh_token",{refresh_token:auth.refresh_token}))}
+  catch(e){if(e.status>=400&&e.status<500){auth=null;saveAuth();drawAcct()}throw e}
+}
+async function api(path,opts={}){
+  if(!auth) throw new Error("auth");
+  if(Date.now()>auth.expires_at-60000) await refresh();
+  const call=()=>fetch(API+path,{...opts,headers:{apikey:CFG.supabaseKey,Authorization:"Bearer "+auth.access_token,"Content-Type":"application/json",...(opts.headers||{})}});
+  let r=await call(); if(r.status===401){await refresh();r=await call()}
+  if(!r.ok) throw new Error("http "+r.status); return r;
+}
+let syncState="idle",syncing=null,syncTimer;
+function scheduleSync(){clearTimeout(syncTimer);syncTimer=setTimeout(sync,700)}
+function sync(){
+  if(!auth||!API) return Promise.resolve();
+  if(syncing) return syncing;
+  if(!navigator.onLine){syncState="offline";drawAcct();return Promise.resolve()}
+  syncState="syncing";drawAcct();
+  syncing=(async()=>{
+    try{
+      const ks=Object.keys(store.dirty);
+      if(ks.length){
+        const rows=ks.map(id=>({user_id:auth.user_id,id,data:store.rows[id].data,updated_at:store.rows[id].updated_at,deleted:!!store.rows[id].deleted}));
+        await api("/rest/v1/podkedd?on_conflict=user_id,id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify(rows)});
+        for(const r of rows) if(store.rows[r.id]&&store.rows[r.id].updated_at===r.updated_at) delete store.dirty[r.id];
+      }
+      const rows=await (await api("/rest/v1/podkedd?select=id,data,updated_at,deleted")).json();
+      const seen=new Set();
+      for(const r of rows){seen.add(r.id); if(store.dirty[r.id]) continue; store.rows[r.id]={data:r.data,updated_at:r.updated_at,deleted:r.deleted}}
+      for(const id of Object.keys(store.rows)) if(!seen.has(id)&&!store.dirty[id]) delete store.rows[id];
+      store.lastSync=Date.now();saveStore();rebuild();syncState="idle";render();
+    }catch(e){syncState=navigator.onLine?"error":"offline"}
+    finally{syncing=null;drawAcct()}
+  })();
+  return syncing;
+}
+const loginUI={err:"",busy:false};
+function drawAcct(){
+  const el=document.getElementById("acct"); if(!el) return;
+  if(!API){el.innerHTML='<div class="row">A szinkron nincs beállítva.</div>';return}
+  if(auth){
+    const st={idle:["ok","Szinkronban"],syncing:["busy","Szinkronizál…"],error:["bad","Szinkron hiba, újrapróbálom"],offline:["bad","Offline, később szinkronizál"]}[syncState]||["","" ];
+    const n=Object.keys(store.dirty).length;
+    el.innerHTML=`<div class="row"><span><span class="sync ${st[0]}"></span>${st[1]}${n&&syncState!=="syncing"?` (${n} vár)`:""}</span></div>
+      <div class="row">${esc(auth.email||"")} · <button type="button" id="logout">Kilépés</button></div>`;
+    document.getElementById("logout").onclick=e=>{ if(e.target.dataset.sure){auth=null;saveAuth();syncState="idle";drawAcct()} else {e.target.dataset.sure=1;e.target.textContent=n?`${n} változás még nincs fent. Biztos?`:"Biztos?"} };
+    return;
+  }
+  let pre=""; try{pre=(JSON.parse(localStorage.getItem("szk-auth-v1")||"null")||{}).email||""}catch(e){}
+  el.innerHTML=`<span class="flabel">Szinkron a telefon és a Mac között</span>
+    <form id="loginForm">
+      <label>E-mail<input id="lEmail" type="email" autocomplete="username" value="${esc(pre)}" required></label>
+      <label>Jelszó<input id="lPw" type="password" autocomplete="current-password" required></label>
+      ${loginUI.err?`<span class="err">${esc(loginUI.err)}</span>`:""}
+      <button class="btn primary" type="submit" ${loginUI.busy?"disabled":""}>${loginUI.busy?"Belépés…":"Belépés"}</button>
+      <span class="hint">Ugyanaz a fiók, mint a Chordsban. Belépés nélkül is működik, csak akkor minden ezen az eszközön marad.</span>
+    </form>`;
+  document.getElementById("loginForm").onsubmit=async e=>{
+    e.preventDefault(); loginUI.busy=true; loginUI.err=""; const em=lEmail.value.trim(), pw=lPw.value; drawAcct();
+    try{setSession(await authCall("password",{email:em,password:pw})); for(const id of Object.keys(store.rows)) store.dirty[id]=1; saveStore(); loginUI.busy=false; drawAcct(); sync();}
+    catch(err){loginUI.busy=false; loginUI.err=err.status===400?"Hibás e-mail vagy jelszó.":"Nem sikerült belépni, ellenőrizd a netet."; drawAcct();}
+  };
+}
+const toObj=(a,own)=>({ep:a[0],start:a[1],title:a[2],dur:a[3],tags:a[4]||[],who:a[5]||[],note:a[6]||"",own:!!own,id:(own?"u":"")+a[0]+"-"+a[1]});
+const all=()=>BASE.map(a=>toObj(a)).concat(S.own.map(a=>toObj(a,true)));
+
+const fmt=s=>{const h=Math.floor(s/3600),mm=Math.floor(s%3600/60),ss=s%60;const p=n=>String(n).padStart(2,"0");return h?`${h}:${p(mm)}:${p(ss)}`:`${mm}:${p(ss)}`};
+const parseT=t=>{t=String(t).trim(); if(!t) return null; const p=t.split(/[:.]/).map(x=>parseInt(x,10)); if(p.some(isNaN)) return null;
+  if(p.length===1) return p[0]*60; if(p.length===2) return p[0]*60+p[1]; return p[0]*3600+p[1]*60+p[2];};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const norm=s=>s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+
+const F={q:"",time:"any",tags:new Set(),who:new Set(),show:"all",sort:"asc"};
+const TIMES=[["any","Bármennyi"],["10","10 perc"],["20","20 perc"],["45","45 perc"],["whole","Egész adás"]];
+const SHOWS=[["all","Mind"],["new","Még nem hallgattam"],["fav","Kedvencek"],["check","Ellenőrizendő"]];
+
+function chipRow(el,items,isOn,onTap){
+  el.innerHTML=items.map(([k,l])=>`<button type="button" class="chip" data-k="${esc(k)}" aria-pressed="${isOn(k)}">${esc(l)}</button>`).join("");
+  el.onclick=e=>{const b=e.target.closest(".chip"); if(!b) return; onTap(b.dataset.k); render();};
+}
+function drawFilters(){
+  chipRow(fTime,TIMES,k=>F.time===k,k=>F.time=k);
+  chipRow(fTag,Object.entries(TAGS),k=>F.tags.has(k),k=>F.tags.has(k)?F.tags.delete(k):F.tags.add(k));
+  chipRow(fWho,WHO.map(w=>[w,w]),k=>F.who.has(k),k=>F.who.has(k)?F.who.delete(k):F.who.add(k));
+  chipRow(fShow,SHOWS,k=>F.show===k,k=>F.show=k);
+}
+
+function filtered(){
+  const q=norm(F.q.trim());
+  let L=all().filter(s=>{
+    if(q){const hay=norm(`e${s.ep} ${s.title} ${s.who.join(" ")} ${s.tags.map(t=>TAGS[t]).join(" ")} ${EPT[s.ep]||""}`); if(!q.split(/\s+/).every(w=>hay.includes(w))) return false;}
+    if(F.time==="whole"){ if(s.dur!==-1) return false; }
+    else if(F.time!=="any"){ if(s.dur==null||s.dur<0||s.dur>+F.time) return false; }
+    if(F.tags.size && !s.tags.some(t=>F.tags.has(t))) return false;
+    if(F.who.size && !s.who.some(w=>F.who.has(w))) return false;
+    if(F.show==="new" && S.done[s.id]) return false;
+    if(F.show==="fav" && !S.fav[s.id]) return false;
+    if(F.show==="check" && !s.note && s.title) return false;
+    return true;
+  });
+  const d=s=>s.dur==null?999:(s.dur<0?998:s.dur);
+  L.sort((a,b)=>F.sort==="short"?d(a)-d(b)||a.ep-b.ep:(F.sort==="desc"?b.ep-a.ep||b.start-a.start:a.ep-b.ep||a.start-b.start));
+  return L;
+}
+
+const icStar='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>';
+const icCheck='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const icCopy='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+
+function card(s,inPick){
+  const dur=s.dur===-1?'<span class="pill dur">egész adás</span>':(s.dur!=null?`<span class="pill dur">~${s.dur} perc</span>`:"");
+  const tags=s.tags.map(t=>`<span class="pill">${esc(TAGS[t]||t)}</span>`).join("");
+  const who=s.who.map(w=>`<span class="pill who">${esc(w)}</span>`).join("");
+  const own=s.own?'<span class="pill own">saját</span>':"";
+  const sp=`https://open.spotify.com/search/${encodeURIComponent("PODkedd E"+s.ep)}`;
+  return `<article class="card${S.done[s.id]&&!inPick?" done":""}" id="${inPick?"":"c-"+s.id}">
+    <div class="counter"><span class="ep">E${s.ep}</span><span class="time">${fmt(s.start)}</span></div>
+    <div class="body">
+      <div class="title${s.title?"":" empty"}">${s.title?esc(s.title):"Téma nincs megadva"}</div>
+      ${EPT[s.ep]?`<div class="eptitle">${esc(EPT[s.ep])}</div>`:""}
+      <div class="meta">${dur}${tags}${who}${own}</div>
+      ${s.note?`<div class="note">${esc(s.note)}</div>`:""}
+    </div>
+    <div class="actions">
+      <button type="button" class="act fav" data-a="fav" data-id="${s.id}" aria-pressed="${!!S.fav[s.id]}" aria-label="Kedvenc">${icStar}</button>
+      <button type="button" class="act dn" data-a="done" data-id="${s.id}" aria-pressed="${!!S.done[s.id]}">${icCheck}${S.done[s.id]?"Meghallgattam":"Hallgattam"}</button>
+      <button type="button" class="act" data-a="copy" data-id="${s.id}">${icCopy}Időpont</button>
+      <a class="act" href="${sp}" target="_blank" rel="noopener">Spotify</a>
+      ${s.own?`<button type="button" class="act" data-a="del" data-id="${s.id}">Törlés</button>`:""}
+    </div>
+  </article>`;
+}
+
+let pickId=null;
+function render(){
+  drawFilters();
+  const L=filtered(), A=all();
+  stats.textContent=`${A.length} sztori · ${new Set(A.map(s=>s.ep)).size} rész · ${Object.keys(S.done).length} meghallgatva`;
+  count.textContent=`${L.length} találat`;
+  list.innerHTML=L.length?L.map(s=>card(s)).join(""):'<div class="empty-state">Nincs ilyen sztori. Lazíts a szűrőkön, vagy vedd fel újként lent.</div>';
+  const p=pickId&&A.find(s=>s.id===pickId);
+  pick.hidden=!p;
+  if(p) pick.innerHTML=`<span class="pick-label">A rulett ezt dobta</span>${card(p,true)}`;
+}
+
+function toast(t){toastEl.textContent=t; toastEl.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>toastEl.hidden=true,1800);}
+const toastEl=document.getElementById("toast");
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-a]"); if(!b) return;
+  const id=b.dataset.id, s=all().find(x=>x.id===id); if(!s) return;
+  const a=b.dataset.a;
+  if(a==="fav"){setFlag(id,"fav",!S.fav[id]); render();}
+  if(a==="done"){setFlag(id,"done",!S.done[id]); render();}
+  if(a==="del"){ if(b.dataset.sure){delRow(id); if(pickId===id) pickId=null; render(); toast("Törölve");}
+    else {b.dataset.sure="1"; b.textContent="Biztos?"; setTimeout(()=>{if(b.isConnected){delete b.dataset.sure; b.textContent="Törlés";}},3000);} }
+  if(a==="copy"){const t=`E${s.ep} ${fmt(s.start)}`; copy(t);}
+});
+function copy(t,label){
+  const done=()=>toast(label||`Másolva: ${t}`);
+  try{navigator.clipboard.writeText(t).then(done,()=>fallback(t,done));}catch(e){fallback(t,done)}
+}
+function fallback(t,cb){const ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); cb();}catch(e){toast(t)} ta.remove();}
+
+spin.onclick=()=>{
+  let L=filtered(); const fresh=L.filter(s=>!S.done[s.id]&&s.title); if(fresh.length) L=fresh;
+  if(!L.length){toast("Nincs mit pörgetni ezekkel a szűrőkkel"); return;}
+  let n=L[Math.floor(Math.random()*L.length)];
+  if(L.length>1) while(n.id===pickId) n=L[Math.floor(Math.random()*L.length)];
+  pickId=n.id; render(); pick.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"});
+};
+
+q.addEventListener("input",()=>{F.q=q.value; render();});
+sort.onchange=()=>{F.sort=sort.value; render();};
+
+const nTagSel=new Set();
+function drawNTags(){chipRow(nTags,Object.entries(TAGS),k=>nTagSel.has(k),k=>{nTagSel.has(k)?nTagSel.delete(k):nTagSel.add(k); drawNTags();});}
+drawNTags();
+addForm.addEventListener("submit",e=>{
+  e.preventDefault();
+  const ep=parseInt(nEp.value,10), st=parseT(nStart.value), d=nDur.value.trim()?parseInt(nDur.value,10):null;
+  if(!ep||st==null){toast("Add meg a rész számát és a kezdést (pl. 1:12:30)"); return;}
+  if(S.own.some(o=>o[0]===ep&&o[1]===st)||BASE.some(o=>o[0]===ep&&o[1]===st)){toast("Ez a sztori már benne van"); return;}
+  const who=nWho.value.split(",").map(x=>x.trim()).filter(Boolean);
+  put("u"+ep+"-"+st,{story:[ep,st,nTitle.value.trim(),isNaN(d)?null:d,[...nTagSel],who]});
+  addForm.reset(); nTagSel.clear(); drawNTags(); render();
+  const el=document.getElementById("c-u"+ep+"-"+st);
+  if(el){el.scrollIntoView({block:"center"}); el.classList.add("flash");} else toast("Elmentve, a szűrők miatt most nem látszik");
+});
+render(); drawAcct(); sync();
+addEventListener("online",sync);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden) sync()});
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
